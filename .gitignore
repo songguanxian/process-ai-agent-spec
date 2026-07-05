@@ -1,0 +1,17 @@
+# Rendered QA artifacts
+work/*render*/
+work/**/*render*/
+work/all_domains_render/
+work/ocr_docx_render/
+work/ocr_docx_word_render/
+work/ocr_docx_word_render_clean/
+
+# Office temporary files
+~$*.docx
+*.tmp
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
