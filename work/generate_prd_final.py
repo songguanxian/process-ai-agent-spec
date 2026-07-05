@@ -1,4 +1,19 @@
-# 工序管控系统 AI 助手（Agent）PRD 正式版
+# -*- coding: utf-8 -*-
+from pathlib import Path
+import re
+
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
+from docx.oxml.ns import qn
+from docx.shared import Inches, Pt
+
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT_MD = ROOT / "outputs" / "工序AI助手_PRD_正式版.md"
+OUT_DOCX = ROOT / "outputs" / "工序AI助手_PRD_正式版.docx"
+
+
+PRD = r'''# 工序管控系统 AI 助手（Agent）PRD 正式版
 
 ## 1. 文档信息
 
@@ -793,3 +808,155 @@ OCR 任务状态至少包含：已创建、识别中、待确认、已确认、�
 5. 跨项目质量风险预测和趋势洞察。
 6. 私有化模型或行业模型微调评估。
 
+'''
+
+
+def set_run_font(run, size=10.5, bold=False):
+    run.font.name = "宋体"
+    run._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), "宋体")
+    run.font.size = Pt(size)
+    run.bold = bold
+
+
+def set_paragraph(paragraph, space_after=4):
+    pf = paragraph.paragraph_format
+    pf.space_before = Pt(0)
+    pf.space_after = Pt(space_after)
+    pf.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
+
+
+def is_table_separator(line):
+    return bool(re.match(r"^\|\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$", line.strip()))
+
+
+def parse_table(lines, start):
+    table_lines = []
+    i = start
+    while i < len(lines) and lines[i].strip().startswith("|"):
+        table_lines.append(lines[i].strip())
+        i += 1
+    if len(table_lines) < 2 or not is_table_separator(table_lines[1]):
+        return None, start
+    rows = []
+    for idx, line in enumerate(table_lines):
+        if idx == 1:
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        rows.append(cells)
+    return rows, i
+
+
+def add_markdown_text(paragraph, text):
+    pos = 0
+    for match in re.finditer(r"`([^`]+)`|\*\*([^*]+)\*\*", text):
+        if match.start() > pos:
+            set_run_font(paragraph.add_run(text[pos:match.start()]))
+        content = match.group(1) or match.group(2)
+        run = paragraph.add_run(content)
+        set_run_font(run, bold=bool(match.group(2)))
+        pos = match.end()
+    if pos < len(text):
+        set_run_font(paragraph.add_run(text[pos:]))
+
+
+def add_table(doc, rows):
+    if not rows:
+        return
+    cols = max(len(row) for row in rows)
+    table = doc.add_table(rows=len(rows), cols=cols)
+    table.style = "Table Grid"
+    for r_idx, row in enumerate(rows):
+        for c_idx in range(cols):
+            cell = table.cell(r_idx, c_idx)
+            text = row[c_idx] if c_idx < len(row) else ""
+            p = cell.paragraphs[0]
+            add_markdown_text(p, text)
+            for run in p.runs:
+                set_run_font(run, size=9.5, bold=(r_idx == 0))
+    doc.add_paragraph()
+
+
+def markdown_to_docx(markdown, path):
+    doc = Document()
+    section = doc.sections[0]
+    section.top_margin = Inches(0.75)
+    section.bottom_margin = Inches(0.75)
+    section.left_margin = Inches(0.8)
+    section.right_margin = Inches(0.8)
+
+    styles = doc.styles
+    styles["Normal"].font.name = "宋体"
+    styles["Normal"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+    styles["Normal"].font.size = Pt(10.5)
+
+    lines = markdown.splitlines()
+    in_code = False
+    code_buf = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        if stripped.startswith("```"):
+            if not in_code:
+                in_code = True
+                code_buf = []
+            else:
+                p = doc.add_paragraph()
+                run = p.add_run("\n".join(code_buf))
+                set_run_font(run, size=9)
+                set_paragraph(p)
+                in_code = False
+            i += 1
+            continue
+
+        if in_code:
+            code_buf.append(line)
+            i += 1
+            continue
+
+        table_rows, next_i = parse_table(lines, i)
+        if table_rows:
+            add_table(doc, table_rows)
+            i = next_i
+            continue
+
+        if not stripped:
+            i += 1
+            continue
+
+        heading = re.match(r"^(#{1,6})\s+(.*)$", stripped)
+        if heading:
+            level = min(len(heading.group(1)), 4)
+            p = doc.add_heading(level=level)
+            add_markdown_text(p, heading.group(2))
+            for run in p.runs:
+                set_run_font(run, size=16 if level == 1 else 14 if level == 2 else 12, bold=True)
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            i += 1
+            continue
+
+        numbered = re.match(r"^(\d+)\.\s+(.*)$", stripped)
+        bullet = re.match(r"^[-*]\s+(.*)$", stripped)
+        if numbered:
+            p = doc.add_paragraph(style="List Number")
+            add_markdown_text(p, numbered.group(2))
+            set_paragraph(p)
+        elif bullet:
+            p = doc.add_paragraph(style="List Bullet")
+            add_markdown_text(p, bullet.group(1))
+            set_paragraph(p)
+        else:
+            p = doc.add_paragraph()
+            add_markdown_text(p, stripped)
+            set_paragraph(p)
+        i += 1
+
+    doc.save(str(path))
+
+
+OUT_MD.parent.mkdir(parents=True, exist_ok=True)
+OUT_MD.write_text(PRD, encoding="utf-8", newline="\n")
+markdown_to_docx(PRD, OUT_DOCX)
+print(OUT_MD)
+print(OUT_DOCX)
