@@ -199,6 +199,16 @@ button {
   padding: 0 12px;
 }
 
+.role-select {
+  height: 34px;
+  min-width: 170px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: #244165;
+  background: #fff;
+}
+
 .dashboard {
   padding: 18px;
 }
@@ -252,6 +262,84 @@ button {
   grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
   gap: 14px;
   margin-top: 14px;
+}
+
+.story-panel {
+  margin-top: 14px;
+}
+
+.story-panel.compact {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.story-panel.compact .story-grid {
+  grid-template-columns: 1fr;
+}
+
+.story-card {
+  display: grid;
+  gap: 5px;
+  min-height: 86px;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.story-card span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.story-card strong {
+  font-size: 14px;
+}
+
+.story-card em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.story-card.disabled {
+  opacity: 0.58;
+  background: #f8f9fc;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.role-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.role-card.active {
+  border-color: var(--blue);
+  box-shadow: inset 3px 0 0 var(--blue);
+  background: var(--blue-soft);
+}
+
+.role-card span,
+.role-card small {
+  color: var(--muted);
 }
 
 .panel {
@@ -424,6 +512,17 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.permission-banner {
+  margin-top: 10px;
+  padding: 10px;
+  color: #8a4b00;
+  background: #fff7e8;
+  border: 1px solid #f2d49c;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .task-title {
@@ -748,6 +847,7 @@ button {
 
   .metrics-grid,
   .content-grid,
+  .story-grid,
   .field-grid,
   .kanban,
   .reference-strip {
@@ -756,6 +856,10 @@ button {
 
   .search-box {
     width: 150px;
+  }
+
+  .role-select {
+    min-width: 130px;
   }
 
   .phone {

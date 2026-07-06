@@ -11,8 +11,59 @@ const referenceImages = [
   { src: "./assets/reference/app-ai.png", label: "App AI 会话" }
 ];
 
+const roles = {
+  fieldWorker: {
+    name: "现场作业人员",
+    scope: "授权项目",
+    allowed: ["guide", "acceptance", "inspection", "whiteboard", "ocr", "report"]
+  },
+  projectManager: {
+    name: "项目管理人员",
+    scope: "项目范围",
+    allowed: ["guide", "acceptance", "inspection", "whiteboard", "ocr", "report", "audit"]
+  },
+  groupManager: {
+    name: "集团/直属单位管理人员",
+    scope: "授权组织范围",
+    allowed: ["guide", "report", "groupBrief", "audit"]
+  },
+  regulator: {
+    name: "监管负责人",
+    scope: "项目监管范围",
+    allowed: ["guide", "ocr", "whiteboard", "report", "audit"]
+  },
+  configAdmin: {
+    name: "业务配置管理员",
+    scope: "配置范围",
+    allowed: ["guide", "config", "audit"]
+  },
+  systemAdmin: {
+    name: "系统管理员",
+    scope: "系统管理范围",
+    allowed: ["guide", "config", "audit", "permissionDenied"]
+  },
+  aiOps: {
+    name: "AI/供应商运维",
+    scope: "脱敏排障数据",
+    allowed: ["guide", "audit"]
+  }
+};
+
+const userStories = [
+  { id: "US-001", label: "操作指南查询", action: "guide", role: "现场作业人员" },
+  { id: "US-002", label: "验收申请草稿", action: "acceptance", role: "现场作业人员" },
+  { id: "US-003", label: "语音检查记录草稿", action: "inspection", role: "现场作业人员" },
+  { id: "US-004", label: "白板照片识别填报", action: "whiteboard", role: "现场作业人员" },
+  { id: "US-005", label: "项目级检查统计", action: "report", role: "项目管理人员" },
+  { id: "US-006", label: "集团四级简报", action: "groupBrief", role: "集团管理人员" },
+  { id: "US-007", label: "责任登记卡/文件 OCR", action: "ocr", role: "监管负责人" },
+  { id: "US-008", label: "字段模板和匹配规则配置", action: "config", role: "业务配置管理员" },
+  { id: "US-009", label: "审计与失败记录", action: "audit", role: "系统管理员" }
+];
+
 const scenarioMap = {
   guide: {
+    storyId: "US-001",
     input: "工序报验步骤",
     taskId: "TN-001",
     title: "操作指南查询",
@@ -24,10 +75,13 @@ const scenarioMap = {
     fields: [
       ["指南", "工序报验操作指南"],
       ["来源版本", "guide:G-001 / v3"],
-      ["关联入口", "验收申请单"]
-    ]
+      ["关联入口", "验收申请单"],
+      ["置信状态", "Top1 高置信"]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager", "groupManager", "regulator", "configAdmin", "systemAdmin", "aiOps"]
   },
   acceptance: {
+    storyId: "US-002",
     input: "发起 XX 项目 K10+887 路基验收申请",
     taskId: "TN-002",
     title: "验收申请草稿",
@@ -43,9 +97,11 @@ const scenarioMap = {
       ["验收类型", "工序验收"],
       ["申请人", "宋冠先"],
       ["申请时间", "系统当前时间"]
-    ]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager"]
   },
   inspection: {
+    storyId: "US-003",
     input: "语音：K12+300 防护栏外观缺陷，生成检查记录",
     taskId: "TN-003",
     title: "检查记录草稿",
@@ -57,10 +113,33 @@ const scenarioMap = {
     fields: [
       ["桩号", "K12+300"],
       ["问题描述", "防护栏外观缺陷"],
-      ["缺失字段", "检查类型、责任单位"]
-    ]
+      ["缺失字段", "检查类型、责任单位"],
+      ["追问策略", "一次性汇总追问"]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager"]
+  },
+  whiteboard: {
+    storyId: "US-004",
+    input: "App 拍摄白板照片，识别桩号和施工节点",
+    taskId: "TN-008",
+    title: "白板照片识别",
+    status: "waiting_confirm",
+    skill: "OCRFillingSkill",
+    tool: "create_ocr_task / get_ocr_result",
+    cardType: "ocr",
+    response: "白板照片已识别：桩号 K10+887，工程部位路基，施工节点工序验收。提交前需要人工确认。",
+    fields: [
+      ["来源", "App 拍照"],
+      ["桩号", "K10+887"],
+      ["工程部位", "路基"],
+      ["施工节点", "工序验收"],
+      ["质量检测", "清晰 / 主体完整"],
+      ["确认要求", "AI结果经用户确认后生效"]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager", "regulator"]
   },
   ocr: {
+    storyId: "US-007",
     input: "上传责任登记卡，识别并填入检查记录",
     taskId: "TN-004",
     title: "OCR 识别确认",
@@ -75,9 +154,11 @@ const scenarioMap = {
       ["候选结构", "2 个"],
       ["责任人", "李工"],
       ["质量判断", "图片清晰，主体完整"]
-    ]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager", "regulator"]
   },
   report: {
+    storyId: "US-005",
     input: "统计本季度不合格检查记录",
     taskId: "TN-005",
     title: "项目级数据简报",
@@ -93,9 +174,11 @@ const scenarioMap = {
       ["逾期未整改", "2"],
       ["合格率", "80%"],
       ["整改闭环率", "33.33%"]
-    ]
+    ],
+    allowedRoles: ["fieldWorker", "projectManager", "groupManager", "regulator"]
   },
   groupBrief: {
+    storyId: "US-006",
     input: "集团 2026 年 2 月工序简报",
     taskId: "TN-006",
     title: "集团四级简报",
@@ -111,9 +194,11 @@ const scenarioMap = {
       ["检查记录", "3,420"],
       ["异常单位", "3 个"],
       ["快照", "RS-202602"]
-    ]
+    ],
+    allowedRoles: ["groupManager", "systemAdmin"]
   },
   config: {
+    storyId: "US-008",
     input: "发布 OCR 字段模板 v4 并查看失败样本",
     taskId: "TN-007",
     title: "配置版本与审计",
@@ -128,7 +213,45 @@ const scenarioMap = {
       ["人工修正率", "18%"],
       ["匹配失败样本", "32"],
       ["回滚版本", "v3"]
-    ]
+    ],
+    allowedRoles: ["configAdmin", "systemAdmin"]
+  },
+  audit: {
+    storyId: "US-009",
+    input: "查看 AI 调用审计、失败记录和异常样本",
+    taskId: "TN-009",
+    title: "审计与失败记录",
+    status: "completed",
+    skill: "AuditSkill",
+    tool: "write_audit_log / query_audit_log",
+    cardType: "audit",
+    response: "已汇总近 7 天 AI 调用审计：工具失败率 3.2%，OCR 低置信 41 次，权限拦截 16 次。",
+    fields: [
+      ["工具失败率", "3.2%"],
+      ["OCR低置信", "41 次"],
+      ["权限拦截", "16 次"],
+      ["高风险确认", "100% 拦截"],
+      ["留存策略", "至少 1 年"],
+      ["证据包", "可导出"]
+    ],
+    allowedRoles: ["projectManager", "groupManager", "regulator", "configAdmin", "systemAdmin", "aiOps"]
+  },
+  permissionDenied: {
+    input: "导出集团 2026 年 2 月全部明细",
+    taskId: "TN-010",
+    title: "权限不足兜底",
+    status: "failed",
+    skill: "ReportBriefSkill",
+    tool: "export_report",
+    cardType: "error",
+    response: "当前角色无集团明细导出权限。系统不会暴露不可见数据存在性，请联系管理员申请权限。",
+    fields: [
+      ["拦截点", "Spring Tool Gateway"],
+      ["错误码", "Error-034"],
+      ["用户提示", "当前账号无导出权限"],
+      ["兜底路径", "查看授权范围摘要 / 申请权限"]
+    ],
+    allowedRoles: ["systemAdmin"]
   }
 };
 
@@ -139,7 +262,10 @@ const baseTasks = [
   { id: "TN-004", type: "ocr", title: "OCR 识别确认", status: "waiting_confirm", owner: "监管负责人" },
   { id: "TN-005", type: "report", title: "项目级数据简报", status: "completed", owner: "项目管理人员" },
   { id: "TN-006", type: "report", title: "集团四级简报", status: "completed", owner: "集团管理人员" },
-  { id: "TN-007", type: "admin", title: "配置版本与审计", status: "completed", owner: "系统管理员" }
+  { id: "TN-007", type: "admin", title: "配置版本与审计", status: "completed", owner: "业务配置管理员" },
+  { id: "TN-008", type: "ocr", title: "白板照片识别", status: "waiting_confirm", owner: "现场作业人员" },
+  { id: "TN-009", type: "audit", title: "审计与失败记录", status: "completed", owner: "系统管理员" },
+  { id: "TN-010", type: "security", title: "权限不足兜底", status: "failed", owner: "系统管理员" }
 ];
 
 const state = {
@@ -155,6 +281,7 @@ const state = {
     context: "广西路桥集团 / 测试一分部 / K12+300",
     idle_reconfirm_minutes: 30
   },
+  currentRole: "fieldWorker",
   activeScenario: "acceptance",
   inputHistory: ["发起 XX 项目 K10+887 路基验收申请"],
   taskNodes: JSON.parse(JSON.stringify(baseTasks)),
@@ -204,11 +331,49 @@ function cycleVariant(direction) {
   setVariant(next);
 }
 
+function getCurrentRole() {
+  return roles[state.currentRole] || roles.fieldWorker;
+}
+
+function switchRole(roleKey) {
+  if (!roles[roleKey]) return;
+  state.currentRole = roleKey;
+  state.auditTrail.unshift(`切换角色：${roles[roleKey].name} / ${roles[roleKey].scope}`);
+  render();
+}
+
+function canRunScenario(scenario) {
+  if (!scenario.allowedRoles) return true;
+  return scenario.allowedRoles.includes(state.currentRole);
+}
+
 function runScenario(name) {
   const scenario = scenarioMap[name];
   if (!scenario) return;
   state.activeScenario = name;
   state.inputHistory.push(scenario.input);
+
+  if (!canRunScenario(scenario)) {
+    state.sseEvents = [
+      { event_type: "message_received", payload: scenario.input },
+      { event_type: "intent_detected", payload: scenario.skill },
+      { event_type: "tool_running", payload: scenario.tool },
+      { event_type: "task_failed", payload: "Error-027 / 当前角色无权访问该上下文" }
+    ];
+    state.confirmation = {
+      confirmation_id: `DENY-${scenario.taskId}`,
+      risk_level: "high",
+      action_type: "permission_denied",
+      required: false
+    };
+    state.taskNodes = state.taskNodes.map((task) =>
+      task.id === scenario.taskId ? { ...task, status: "failed", last_input: scenario.input } : task
+    );
+    state.auditTrail.unshift(`权限拦截：${getCurrentRole().name} -> ${scenario.title}`);
+    render();
+    return;
+  }
+
   state.sseEvents = [
     { event_type: "message_received", payload: scenario.input },
     { event_type: "intent_detected", payload: scenario.skill },
@@ -225,6 +390,11 @@ function runScenario(name) {
     action_type: scenario.cardType === "ocr" ? "bind_ocr_result" : "submit_form",
     required: scenario.status === "waiting_confirm"
   };
+  if (scenario.cardType === "ocr") {
+    state.ocrBatch.status = scenario.status;
+    state.ocrBatch.confidence_status = scenario.title.includes("白板") ? "can_adopt_after_confirm" : "need_user_confirm";
+    state.ocrBatch.result_groups = scenario.title.includes("白板") ? 1 : 2;
+  }
   state.auditTrail.unshift(`${scenario.tool} -> ${scenario.status} / ${scenario.title}`);
   render();
 }
@@ -265,6 +435,7 @@ function render() {
         <strong>PROTOTYPE</strong>
         <span>一次性 PoC，不连接真实后端；所有状态保存在浏览器内存中。</span>
         <span class="mono">?variant=${variant}</span>
+        <span class="tag green">当前角色：${getCurrentRole().name}</span>
       </div>
       ${variant === "A" ? renderVariantA() : ""}
       ${variant === "B" ? renderVariantB() : ""}
@@ -287,11 +458,14 @@ function renderVariantA() {
             <div class="split-actions">
               <button class="btn" data-action="guide">指南</button>
               <button class="btn" data-action="acceptance">验收草稿</button>
+              <button class="btn" data-action="inspection">检查草稿</button>
+              <button class="btn" data-action="whiteboard">白板识别</button>
               <button class="btn" data-action="ocr">OCR识别</button>
               <button class="btn" data-action="report">项目简报</button>
             </div>
           </div>
           ${renderMetrics()}
+          ${renderUserStoryPanel()}
           <div class="content-grid">
             ${renderReportPanel()}
             ${renderReferencePanel()}
@@ -317,7 +491,7 @@ function renderVariantB() {
             <div class="app-command-grid">
               <button class="app-command" data-action="guide">操作指南</button>
               <button class="app-command" data-action="inspection">语音检查</button>
-              <button class="app-command" data-action="ocr">现场拍照</button>
+              <button class="app-command" data-action="whiteboard">现场拍照</button>
               <button class="app-command" data-action="acceptance">工序报验</button>
               <button class="app-command" data-action="report">项目简报</button>
               <button class="app-command" data-action="groupBrief">集团简报</button>
@@ -336,6 +510,7 @@ function renderVariantB() {
         </nav>
       </div>
       <aside class="mobile-side">
+        ${renderUserStoryPanel("compact")}
         ${renderAiCompact()}
         ${renderStatePanel()}
       </aside>
@@ -347,14 +522,8 @@ function renderVariantC() {
   return `
     <section class="workflow-board">
       <aside class="rail">
-        <div class="panel">
-          <div class="panel-head"><strong>角色入口</strong></div>
-          <div class="panel-body">
-            ${["现场作业人员", "项目管理人员", "监管负责人", "业务配置管理员", "系统管理员"]
-              .map((role) => `<button class="btn" data-action="config">${role}</button>`)
-              .join(" ")}
-          </div>
-        </div>
+        ${renderRolePanel()}
+        ${renderUserStoryPanel("compact")}
         ${renderReferencePanel()}
       </aside>
       <main class="board-center">
@@ -364,8 +533,10 @@ function renderVariantC() {
             <div class="split-actions">
               <button class="btn" data-action="guide">指南</button>
               <button class="btn" data-action="acceptance">表单</button>
+              <button class="btn" data-action="inspection">检查</button>
               <button class="btn" data-action="ocr">OCR</button>
               <button class="btn" data-action="groupBrief">集团简报</button>
+              <button class="btn" data-action="audit">审计</button>
             </div>
           </div>
           <div class="panel-body">
@@ -400,6 +571,11 @@ function renderHeader(path) {
       <div class="breadcrumb"><button class="btn icon">≡</button><span>${path}</span></div>
       <div class="header-actions">
         <input class="search-box" value="广西路桥集团" aria-label="当前组织" />
+        <select class="role-select" data-role-select aria-label="切换角色">
+          ${Object.entries(roles)
+            .map(([key, role]) => `<option value="${key}" ${key === state.currentRole ? "selected" : ""}>${role.name}</option>`)
+            .join("")}
+        </select>
         <button class="btn icon">⌕</button>
         <button class="btn">宋冠先</button>
       </div>
@@ -415,6 +591,53 @@ function renderMetrics() {
       <div class="metric purple"><strong>0个</strong><span>今日申请(工序报验)</span></div>
       <div class="metric amber"><strong>0人次</strong><span>今日验收(工序报验)</span></div>
     </div>
+  `;
+}
+
+function renderUserStoryPanel(mode = "full") {
+  return `
+    <section class="panel story-panel ${mode === "compact" ? "compact" : ""}">
+      <div class="panel-head">
+        <strong>9 个用户故事入口</strong>
+        <span class="tag">${getCurrentRole().scope}</span>
+      </div>
+      <div class="panel-body story-grid">
+        ${userStories
+          .map((story) => {
+            const scenario = scenarioMap[story.action];
+            const allowed = scenario ? canRunScenario(scenario) : false;
+            return `
+              <button class="story-card ${allowed ? "" : "disabled"}" data-action="${story.action}">
+                <span>${story.id}</span>
+                <strong>${story.label}</strong>
+                <em>${story.role}</em>
+              </button>
+            `;
+          })
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderRolePanel() {
+  return `
+    <section class="panel role-panel">
+      <div class="panel-head"><strong>角色与权限</strong><span class="tag green">${getCurrentRole().name}</span></div>
+      <div class="panel-body role-grid">
+        ${Object.entries(roles)
+          .map(
+            ([key, role]) => `
+              <button class="role-card ${key === state.currentRole ? "active" : ""}" data-role="${key}">
+                <strong>${role.name}</strong>
+                <span>${role.scope}</span>
+                <small>${role.allowed.length} 个可办场景</small>
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    </section>
   `;
 }
 
@@ -471,6 +694,7 @@ function renderAiDrawer() {
       <div class="ai-context">
         <span class="tag">Web</span>
         <span class="tag">当前项目：测试一分部</span>
+        <span class="tag">角色：${getCurrentRole().name}</span>
         <span class="tag green">上下文已授权</span>
       </div>
       <div class="conversation">
@@ -506,23 +730,30 @@ function renderMessages() {
 
 function renderActiveTask() {
   const scenario = scenarioMap[state.activeScenario];
+  const allowed = canRunScenario(scenario);
+  const statusClass = !allowed || scenario.status === "failed" ? "red" : scenario.status === "waiting_confirm" ? "red" : "green";
   return `
     <article class="task-card active">
       <div class="task-head">
         <div>
-          <h3 class="task-title">${scenario.title}</h3>
+          <h3 class="task-title">${scenario.storyId ? `${scenario.storyId} · ` : ""}${scenario.title}</h3>
           <div class="task-meta">${scenario.skill} · ${scenario.tool} · ${scenario.status}</div>
         </div>
-        <span class="tag ${scenario.status === "waiting_confirm" ? "red" : "green"}">${scenario.status}</span>
+        <span class="tag ${statusClass}">${allowed ? scenario.status : "permission_denied"}</span>
       </div>
+      ${
+        allowed
+          ? ""
+          : `<div class="permission-banner">当前角色「${getCurrentRole().name}」无权执行该场景。系统只展示兜底说明，不暴露不可见数据。</div>`
+      }
       <div class="field-grid">
         ${scenario.fields.map(([label, value]) => `<div class="field"><label>${label}</label><strong>${value}</strong></div>`).join("")}
       </div>
       <div class="split-actions">
         ${
-          scenario.status === "waiting_confirm"
+          allowed && scenario.status === "waiting_confirm"
             ? `<button class="btn primary" data-action="confirm">确认并执行</button>`
-            : `<button class="btn primary" data-action="${scenario.cardType === "report" ? "report" : "acceptance"}">刷新结果</button>`
+            : `<button class="btn primary" data-action="${state.activeScenario}">刷新结果</button>`
         }
         <button class="btn" data-action="manual">转人工处理</button>
       </div>
@@ -555,9 +786,12 @@ function renderComposer() {
         <button class="btn" data-action="guide">工序报验步骤</button>
         <button class="btn" data-action="acceptance">发起验收申请</button>
         <button class="btn" data-action="inspection">语音检查记录</button>
+        <button class="btn" data-action="whiteboard">白板照片</button>
         <button class="btn" data-action="ocr">上传OCR资料</button>
         <button class="btn" data-action="report">项目简报</button>
         <button class="btn" data-action="groupBrief">集团简报</button>
+        <button class="btn" data-action="config">配置版本</button>
+        <button class="btn" data-action="audit">审计失败</button>
       </div>
       <div class="input-row">
         <input value="${scenarioMap[state.activeScenario].input}" aria-label="模拟输入" />
@@ -614,6 +848,12 @@ function renderAuditPanel() {
 function renderStatePanel() {
   const visible = {
     session: state.session,
+    currentRole: {
+      key: state.currentRole,
+      name: getCurrentRole().name,
+      scope: getCurrentRole().scope,
+      allowed: getCurrentRole().allowed
+    },
     activeScenario: state.activeScenario,
     taskNodes: state.taskNodes,
     ocrBatch: state.ocrBatch,
@@ -649,6 +889,11 @@ function bindEvents(root) {
       else runScenario(action);
     });
   });
+  root.querySelectorAll("[data-role]").forEach((button) => {
+    button.addEventListener("click", () => switchRole(button.getAttribute("data-role")));
+  });
+  const roleSelect = root.querySelector("[data-role-select]");
+  if (roleSelect) roleSelect.addEventListener("change", (event) => switchRole(event.target.value));
   const prev = root.querySelector("[data-variant-prev]");
   const next = root.querySelector("[data-variant-next]");
   if (prev) prev.addEventListener("click", () => cycleVariant(-1));
