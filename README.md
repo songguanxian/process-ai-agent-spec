@@ -11,10 +11,11 @@
 | 顺序 | 文档 | 用途 |
 |---|---|---|
 | 1 | [工序AI助手_PRD_正式版.md](outputs/工序AI助手_PRD_正式版.md) | 产品需求正式版，面向产品、业务、项目管理与验收沟通。 |
-| 2 | [工序AI助手_AI_Coding_开发规格说明.md](outputs/工序AI助手_AI_Coding_开发规格说明.md) | Codex AI Coding 的唯一开发规格输入，面向代码生成、架构拆分、接口与数据设计。 |
-| 3 | [工序AI助手_PRD_正式版.docx](outputs/工序AI助手_PRD_正式版.docx) | PRD Word 交付版，便于评审、流转和归档。 |
-| 4 | [工序AI助手需求说明书_多领域澄清合并版.docx](outputs/工序AI助手需求说明书_多领域澄清合并版.docx) | Grilling 多领域澄清后的合并版需求说明书，用于追溯需求来源。 |
-| 5 | [工序AI助手需求说明书_OCR场景细化版.docx](outputs/工序AI助手需求说明书_OCR场景细化版.docx) | OCR/视觉识别场景细化版，用于追溯 OCR 识别、匹配、确认和填报闭环。 |
+| 2 | [工序AI助手_AI_Coding_开发规格说明_v2_工程化增强版.md](outputs/工序AI助手_AI_Coding_开发规格说明_v2_工程化增强版.md) | Codex AI Coding 的推荐开发规格输入，补齐 API Schema、Tool Schema、状态事件、权限矩阵、SSE、GenUI、RAG、Prompt 和测试矩阵。 |
+| 3 | [工序AI助手_AI_Coding_开发规格说明.md](outputs/工序AI助手_AI_Coding_开发规格说明.md) | V1.0 开发规格基线，用于追溯原始 AI Coding 规格。 |
+| 4 | [工序AI助手_PRD_正式版.docx](outputs/工序AI助手_PRD_正式版.docx) | PRD Word 交付版，便于评审、流转和归档。 |
+| 5 | [工序AI助手需求说明书_多领域澄清合并版.docx](outputs/工序AI助手需求说明书_多领域澄清合并版.docx) | Grilling 多领域澄清后的合并版需求说明书，用于追溯需求来源。 |
+| 6 | [工序AI助手需求说明书_OCR场景细化版.docx](outputs/工序AI助手需求说明书_OCR场景细化版.docx) | OCR/视觉识别场景细化版，用于追溯 OCR 识别、匹配、确认和填报闭环。 |
 
 ## 项目范围
 
@@ -71,11 +72,13 @@
 ├─ outputs/
 │  ├─ 工序AI助手_PRD_正式版.md
 │  ├─ 工序AI助手_PRD_正式版.docx
+│  ├─ 工序AI助手_AI_Coding_开发规格说明_v2_工程化增强版.md
 │  ├─ 工序AI助手_AI_Coding_开发规格说明.md
 │  ├─ 工序AI助手需求说明书_多领域澄清合并版.docx
 │  └─ 工序AI助手需求说明书_OCR场景细化版.docx
 └─ work/
    ├─ generate_ai_coding_spec.py
+   ├─ generate_ai_coding_spec_v2.py
    ├─ generate_prd_final.py
    ├─ merge_all_domain_requirements.py
    ├─ merge_ocr_requirements.py
@@ -88,7 +91,7 @@
 
 ## 面向 Codex AI Coding 的使用方式
 
-开发代码时优先使用 [工序AI助手_AI_Coding_开发规格说明.md](outputs/工序AI助手_AI_Coding_开发规格说明.md)，该文档已经细化到以下实现维度：
+开发代码时优先使用 [工序AI助手_AI_Coding_开发规格说明_v2_工程化增强版.md](outputs/工序AI助手_AI_Coding_开发规格说明_v2_工程化增强版.md)，该文档已经细化到以下实现维度：
 
 - 项目概述、总体架构、Agent 总体设计。
 - Skill、Tool、MCP 服务设计。
@@ -96,6 +99,7 @@
 - 权限模型、页面设计、日志设计、性能要求和安全设计。
 - Given/When/Then 测试用例。
 - Code Generation Specification，包括 Spring、Python Deep Agents、Prompt、Skill、Tool、MCP、RAG、Config、Test 等目录划分。
+- V2 工程化增强章节，包括 API Contract、Tool Contract、Data Model Enhancement、State Event Matrix、SSE Protocol、GenUI Schema、RAG Tool Contract、Permission Matrix、Prompt Template、Expanded Test Matrix 和 Codex AI Coding Task Slices。
 
 生成代码时以该规格为准；PRD 用于解释产品目标、业务范围、验收口径和排期策略。
 
@@ -110,7 +114,8 @@
 ## 当前状态
 
 - PRD 正式版已生成。
-- AI Coding 开发规格说明已生成。
+- AI Coding 开发规格说明 V1.0 已生成。
+- AI Coding 开发规格说明 V2.0 工程化增强版已生成。
 - 多领域需求澄清合并版已生成。
 - OCR 场景细化版已生成。
 - GitHub 远程仓库已配置为 `origin/main`。

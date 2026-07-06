@@ -5,6 +5,7 @@ work/all_domains_render/
 work/ocr_docx_render/
 work/ocr_docx_word_render/
 work/ocr_docx_word_render_clean/
+work/extracted-docx-images/
 
 # Office temporary files
 ~$*.docx
