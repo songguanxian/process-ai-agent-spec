@@ -76,6 +76,14 @@
 │  ├─ 工序AI助手_AI_Coding_开发规格说明.md
 │  ├─ 工序AI助手需求说明书_多领域澄清合并版.docx
 │  └─ 工序AI助手需求说明书_OCR场景细化版.docx
+├─ prototype/
+│  └─ ai-assistant-poc/
+│     ├─ index.html
+│     ├─ app.js
+│     ├─ styles.css
+│     ├─ Start-PoC.ps1
+│     ├─ NOTES.md
+│     └─ assets/reference/
 └─ work/
    ├─ generate_ai_coding_spec.py
    ├─ generate_ai_coding_spec_v2.py
@@ -88,6 +96,28 @@
 ```
 
 `work/` 目录保留文档生成、合并和校验脚本。Word 渲染校验产生的 PNG/PDF 临时文件已通过 `.gitignore` 排除。
+
+## 功能原型 PoC
+
+本仓库包含一个一次性可运行 Demo，用于评审 Web/App AI 助手的核心交互形态：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File prototype\ai-assistant-poc\Start-PoC.ps1
+```
+
+打开：
+
+```text
+http://127.0.0.1:5177/prototype/ai-assistant-poc/?variant=A
+```
+
+原型提供 3 个可切换变体：
+
+- `A`：Web 业务驾驶舱 + 右侧 AI 侧边栏。
+- `B`：App 现场作业模式，突出拍照、语音、常用指令和移动端确认。
+- `C`：运营工作台模式，突出任务节点、审计、配置版本和管理视角。
+
+原型不连接真实后端，不持久化数据，所有状态保存在浏览器内存中。评审完成后应删除或吸收为正式设计。
 
 ## 面向 Codex AI Coding 的使用方式
 
@@ -116,6 +146,7 @@
 - PRD 正式版已生成。
 - AI Coding 开发规格说明 V1.0 已生成。
 - AI Coding 开发规格说明 V2.0 工程化增强版已生成。
+- Web/App AI 助手功能原型 PoC 已生成。
 - 多领域需求澄清合并版已生成。
 - OCR 场景细化版已生成。
 - GitHub 远程仓库已配置为 `origin/main`。
